@@ -6,16 +6,22 @@
 
 using namespace std;
 
+
+void test1() {
+    Control *control = new Control(nullptr);
+    control->kinematicsMove(100, 100, 100);
+}
+
 int main() {
     Uart *uart = new Uart();
     uart->connect("/dev/ttyUSB0");
     Control *control = new Control(uart);
     control->init();
     while (1) {
-        int i, j;
-        scanf("%d %d", &i, &j);
-        control->setPwm(i, j);
-        control->go();
+        double x, y, z;
+        scanf("%lf %lf %lf", &x, &y, &z);
+        control->kinematicsMove(x, y, z);
     }
     return 0;
 }
+
