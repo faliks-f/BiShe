@@ -8,15 +8,16 @@
 #include "Utils.h"
 #include "Buffer.h"
 #include "cstring"
+#include "iostream"
 
 using namespace std;
 
 void Uart::connect(const char *device) {
     fd = open(device, O_RDWR | O_NONBLOCK | O_NDELAY);
-    Utils::errIf(fd < 0, "Uart open error!");
+    ErrorUtils::errIf(fd < 0, "Uart open error!");
     struct termios newtio, oldtio;
     /*保存测试现有串口参数设置，在这里如果串口号等出错，会有相关的出错信息*/
-    Utils::errIf(tcgetattr(fd, &oldtio) != 0, "Get config error!");
+    ErrorUtils::errIf(tcgetattr(fd, &oldtio) != 0, "Get config error!");
     bzero(&newtio, sizeof(newtio));
     newtio.c_cflag |= CLOCAL | CREAD;
     newtio.c_cflag &= ~CSIZE;
@@ -47,7 +48,7 @@ void Uart::connect(const char *device) {
     newtio.c_cc[VMIN] = 0;
     /*处理未接收字符*/
     tcflush(fd, TCIFLUSH);
-    Utils::errIf(-1 == tcsetattr(fd, TCSANOW, &newtio), "Uart set config error!");
+    ErrorUtils::errIf(-1 == tcsetattr(fd, TCSANOW, &newtio), "Uart set config error!");
     tcflush(fd, TCIOFLUSH);
 }
 
@@ -71,9 +72,9 @@ Uart::Uart() {
 void Uart::write() {
     const char *s = buffer->c_str();
     int len = (int) buffer->length();
-    printf("want to send:%s\n", s);
+    cout << "want to send:" << s << endl;
     int writeLen = ::write(fd, s, len);
-    Utils::errIf(writeLen < 0, "Uart write error!");
+    ErrorUtils::errIf(writeLen < 0, "Uart write error!");
 }
 
 void Uart::append(const char *s) {
@@ -89,7 +90,7 @@ void Uart::send() {
 void Uart::read() {
     char s[1024] = {0};
     int len = ::read(fd, s, 1024);
-    Utils::errIf(len < 0, "Uart read error!");
-    printf("%s\n", s);
+    ErrorUtils::errIf(len < 0, "Uart read error!");
+    cout << s << endl;
 }
 

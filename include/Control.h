@@ -9,6 +9,7 @@
 #include "string"
 
 class Uart;
+class Camera;
 
 class Control {
 private:
@@ -34,22 +35,28 @@ private:
 
     Uart *uart = nullptr;
 
+    Camera *camera = nullptr;
+
     static std::string convert(int i, int n);
 
     int kinematicsAnalysis(double x, double y, double z, double alpha);
 
-public:
-    Control(Uart *);
-
     void setPwm(int index, int pwm);
-
-    void init();
 
     void go();
 
-    void kinematicsMove(double x, double y, double z);
 
-    void test(int index, std::string pwm);
+
+public:
+    Control(Uart *, Camera *);
+
+    ~Control();
+
+    void init();
+
+    void fromImgCor2WorldCor(const std::vector<int>&point);
+
+    [[nodiscard()]] bool kinematicsMove(double x, double y, double z);
 };
 
 

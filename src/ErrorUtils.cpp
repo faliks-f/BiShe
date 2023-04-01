@@ -4,10 +4,11 @@
 
 #include "Utils.h"
 #include "cstdio"
+#include "cstdlib"
 
-
-void Utils::errIf(bool condition, const char *s) {
+void ErrorUtils::errIf(bool condition, const char *s) {
     if (condition) {
         perror(s);
+//        abort();
     }
 }

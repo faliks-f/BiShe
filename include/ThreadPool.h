@@ -2,8 +2,8 @@
 // Created by faliks on 1/26/23.
 //
 
-#ifndef DAY6_THREADPOOL_H
-#define DAY6_THREADPOOL_H
+#ifndef BISHE_THREADPOOL_H
+#define BISHE_THREADPOOL_H
 
 #include "condition_variable"
 #include "functional"
@@ -50,4 +50,4 @@ auto ThreadPool::add(F &&f, Args &&... args) -> std::future<typename std::result
     return res;
 }
 
-#endif  // DAY6_THREADPOOL_H
+#endif  // BISHE_THREADPOOL_H

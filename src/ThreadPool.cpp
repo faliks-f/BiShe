@@ -1,7 +1,3 @@
-//
-// Created by faliks on 1/26/23.
-//
-
 #include "ThreadPool.h"
 
 using namespace std;

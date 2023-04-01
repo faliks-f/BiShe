@@ -6,9 +6,10 @@
 #include "Uart.h"
 #include "Utils.h"
 #include "cmath"
+#include "Camera.h"
+#include "MathUtils.h"
 
 using namespace std;
-
 
 void Control::setPwm(int index, int pwm) {
     string indexStr = convert(index, 3);
@@ -28,34 +29,12 @@ void Control::setPwm(int index, int pwm) {
     }
 }
 
-Control::Control(Uart *uart1) {
-    commands = vector<string>{"#000P1500T0500!", "#001P1500T1000!", "#002P1500T1000!",
-                              "#003P1500T1000!", "#004P1500T0500!", "#005P1500T0500!"};
-    command = "#000P1500T0100!";
-    uart = uart1;
-    kinematics.L0 = 1100;
-    kinematics.L1 = 1050;
-    kinematics.L2 = 750;
-    kinematics.L3 = 1900;
-}
 
 void Control::go() {
-    Utils::errIf(uart == nullptr, "Uart didn't init");
+    ErrorUtils::errIf(uart == nullptr, "Uart didn't init");
     uart->append(command.c_str());
     uart->send();
     sleep(1);
-}
-
-void Control::test(int index, std::string pwm) {
-    string i = to_string(index);
-    for (int j = 0; j < i.length(); ++j) {
-        commands[0][3 - j] = i[i.length() - 1 - j];
-    }
-    for (int j = 5; j < 9; ++j) {
-        commands[0][j] = pwm[j - 5];
-    }
-    uart->append(commands[0].c_str());
-    uart->send();
 }
 
 std::string Control::convert(int i, int n) {
@@ -70,8 +49,8 @@ std::string Control::convert(int i, int n) {
 }
 
 void Control::init() {
-    Utils::errIf(uart == nullptr, "Uart didn't init");
-    for (int i = 5; i >= 0; --i) {
+    ErrorUtils::errIf(uart == nullptr, "Uart didn't init");
+    for (int i = 0; i <= 5; ++i) {
         uart->append(commands[i].c_str());
         uart->send();
         sleep(1);
@@ -79,11 +58,11 @@ void Control::init() {
 
 }
 
-void Control::kinematicsMove(double x, double y, double z) {
+bool Control::kinematicsMove(double x, double y, double z) {
     int min = 0;
     bool flag = false;
     if (y < 0) {
-        return;
+        return false;
     }
     //寻找最佳角度
     for (int i = 0; i >= -135; i--) {
@@ -97,16 +76,14 @@ void Control::kinematicsMove(double x, double y, double z) {
     //用3号舵机与水平最大的夹角作为最佳值
     if (flag) {
         kinematicsAnalysis(x, y, z, min);
-        for (int j = 3; j >= 0; --j) {
+        for (int j = 0; j <= 3; ++j) {
             setPwm(j, kinematics.servoPWM[j]);
             go();
-            if (j == 1) {
-                sleep(2);
-            }
         }
         setPwm(1, kinematics.servoPWM[1]);
         go();
     }
+    return flag;
 }
 
 int Control::kinematicsAnalysis(double x, double y, double z, double alpha) {
@@ -170,6 +147,43 @@ int Control::kinematicsAnalysis(double x, double y, double z, double alpha) {
     kinematics.servoPWM[2] = (int) (1500 - 2000.0 * kinematics.servoAngle[2] / 270.0);
     kinematics.servoPWM[3] = (int) (1500 - 2000.0 * kinematics.servoAngle[3] / 270.0);
     return 0;
+}
+
+Control::Control(Uart *uart1, Camera *camera1) {
+    this->uart = uart1;
+    this->camera = camera1;
+    commands = vector<string>{"#000P1500T0500!", "#001P1500T1000!", "#002P1500T1000!",
+                              "#003P1500T1000!", "#004P1500T0500!", "#005P1300T0500!"};
+    command = "#000P1500T0100!";
+    kinematics.L0 = 1100;
+    kinematics.L1 = 1050;
+    kinematics.L2 = 750;
+    kinematics.L3 = 1900;
+}
+
+Control::~Control() {
+    if (!uart) {
+        delete uart;
+        uart = nullptr;
+    }
+    if (!camera) {
+        delete camera;
+        camera = nullptr;
+    }
+}
+
+void Control::fromImgCor2WorldCor(const vector<int> &point) {
+    if (point[0] < 0 || point[1] < 0) {
+        return;
+    }
+    const vector<int> &matCenter = camera->getMatCenter();
+    int x = point[0] - matCenter[0];
+    int y = point[1] - matCenter[1];
+    vector<int> newPoint = MathUtils::rotate(x, y, -50);
+    bool isMove = kinematicsMove(-(newPoint[1] * 2000 / 160), abs(newPoint[0] * 2000 / 160), 800);
+    if (isMove) {
+        getchar();
+    }
 }
 
 

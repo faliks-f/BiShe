@@ -6,7 +6,7 @@
 #define BISHE_UTILS_H
 
 
-class Utils {
+class ErrorUtils {
 public:
     static void errIf(bool condition, const char *);
 };
