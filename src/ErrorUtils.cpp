@@ -9,6 +9,5 @@
 void ErrorUtils::errIf(bool condition, const char *s) {
     if (condition) {
         perror(s);
-//        abort();
     }
 }

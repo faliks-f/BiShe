@@ -34,7 +34,8 @@ void Control::go() {
     ErrorUtils::errIf(uart == nullptr, "Uart didn't init");
     uart->append(command.c_str());
     uart->send();
-    sleep(1);
+    usleep(1e5);
+//    sleep(1);
 }
 
 std::string Control::convert(int i, int n) {
@@ -50,11 +51,14 @@ std::string Control::convert(int i, int n) {
 
 void Control::init() {
     ErrorUtils::errIf(uart == nullptr, "Uart didn't init");
-    for (int i = 0; i <= 5; ++i) {
+    for (int i = 1; i <= 4; ++i) {
         uart->append(commands[i].c_str());
         uart->send();
-        sleep(1);
+        usleep(5e5);
     }
+    uart->append(commands[0].c_str());
+    uart->send();
+    usleep(5e5);
 
 }
 
@@ -182,8 +186,31 @@ void Control::fromImgCor2WorldCor(const vector<int> &point) {
     vector<int> newPoint = MathUtils::rotate(x, y, -50);
     bool isMove = kinematicsMove(-(newPoint[1] * 2000 / 160), abs(newPoint[0] * 2000 / 160), 800);
     if (isMove) {
-        getchar();
+        sleep(1);
+        bool isClamped = kinematicsMove(-(newPoint[1] * 2000 / 160), abs(newPoint[0] * 2000 / 160), 300);
+        if (isClamped) {
+            sleep(1);
+            clamp();
+            sleep(1);
+            init();
+            sleep(1);
+            kinematicsMove(0, 2000, 300);
+            sleep(1);
+            loosen();
+            sleep(1);
+            init();
+        }
     }
+}
+
+void Control::clamp() {
+    setPwm(5, 1700);
+    go();
+}
+
+void Control::loosen() {
+    setPwm(5, 1200);
+    go();
 }
 
 

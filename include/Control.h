@@ -9,6 +9,7 @@
 #include "string"
 
 class Uart;
+
 class Camera;
 
 class Control {
@@ -46,7 +47,6 @@ private:
     void go();
 
 
-
 public:
     Control(Uart *, Camera *);
 
@@ -54,9 +54,13 @@ public:
 
     void init();
 
-    void fromImgCor2WorldCor(const std::vector<int>&point);
+    void fromImgCor2WorldCor(const std::vector<int> &point);
 
     [[nodiscard()]] bool kinematicsMove(double x, double y, double z);
+
+    void clamp();
+
+    void loosen();
 };
 
 

@@ -22,7 +22,8 @@ public:
 enum class ColorIndex {
     RED = 0,
     GREEN = 1,
-    YELLOW = 2
+    YELLOW = 2,
+    NO_COLOR = 3
 };
 
 

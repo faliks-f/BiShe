@@ -13,6 +13,9 @@ static bool compareArea(vector<Point> &a, vector<Point> &b) {
 }
 
 vector<vector<Point>> Channel::getContour(Mat &mat, ColorIndex i) {
+    if (i == ColorIndex::NO_COLOR) {
+        return {};
+    }
     Mat hsv, mask;
     cvtColor(mat, hsv, COLOR_BGR2HSV);
     inRange(hsv, getColorLow(i), getColorHigh(i), mask);
@@ -27,14 +30,14 @@ vector<vector<Point>> Channel::getContour(Mat &mat, ColorIndex i) {
     vector<vector<Point>> contours;
     findContours(mask, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
     sort(contours.begin(), contours.end(), compareArea);
+    vector<vector<Point>> res{};
     for (auto &c: contours) {
         double area = contourArea(c);
-        if (area < 500 && area > 1000) {
-            break;
+        if (area > 300 && area < 1200) {
+            res.push_back(c);
         }
-        return {c};
     }
-    return {};
+    return res;
 }
 
 void Channel::setGetColorLow(std::function<std::array<int, 3>(ColorIndex)> cb) {

@@ -35,12 +35,12 @@ Camera::Camera(const string &device) {
             return HSVColor::YELLOW_HIGH;
         }
     });
-    namedWindow("images");
-    setMouseCallback("images", [](int event, int x, int y, int flags, void *parm) {
-        if (event & EVENT_LBUTTONDBLCLK) {
-            cout << x << " " << y << endl;
-        }
-    }, nullptr);
+//    namedWindow("images");
+//    setMouseCallback("images", [](int event, int x, int y, int flags, void *parm) {
+//        if (event & EVENT_LBUTTONDBLCLK) {
+//            cout << x << " " << y << endl;
+//        }
+//    }, nullptr);
 }
 
 Camera::~Camera() {
@@ -56,9 +56,12 @@ Camera::~Camera() {
 
 void Camera::doJob() {
     Mat mat;
-    namedWindow("images", 1);
     while (cap->read(mat)) {
-        auto c = channel->getContour(mat, ColorIndex::GREEN);
+        vector<vector<Point>> c{};
+        {
+            unique_lock<mutex> uniqueLock(indexMutex);
+            c = channel->getContour(mat, colorIndex);
+        }
         if (!c.empty()) {
             drawContours(mat, c, -1, Scalar(0, 0, 0), 2);
             calCenter(c);
@@ -66,12 +69,8 @@ void Camera::doJob() {
             unique_lock<mutex> uniqueLock(centerMutex);
             center = {-1, -1};
         }
-        {
-            unique_lock<mutex> uniqueLock(imgMutex);
-            drawImg = mat;
-            imshow("images", mat);
-        }
-        waitKey(1);
+        drawImg = mat.clone();
+        cvtColor(drawImg, drawImg, COLOR_BGR2RGB);
     }
 }
 
@@ -86,17 +85,29 @@ void Camera::calCenter(const vector<std::vector<cv::Point>> &c) {
 }
 
 std::vector<int> Camera::getCenter() {
+    auto x = center[0];
+    auto y = center[1];
+    if (abs(x - 175) < 15 && abs(y - 110) < 15) {
+        return {-1, -1};
+    }
     unique_lock<mutex> uniqueLock(centerMutex);
     return center;
 }
 
-cv::Mat Camera::getDrawImg() {
-    unique_lock<mutex> uniqueLock(imgMutex);
-    return drawImg.clone();
+const uchar *Camera::getDrawImg() {
+    if (drawImg.empty()) {
+        return nullptr;
+    }
+    return drawImg.data;
 }
 
 const vector<int> &Camera::getMatCenter() const {
     return matCenter;
 }
+
+void Camera::setColorIndex(ColorIndex i) {
+    colorIndex = i;
+}
+
 
 

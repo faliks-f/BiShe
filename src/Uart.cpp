@@ -28,13 +28,12 @@ void Uart::connect(const char *device) {
     newtio.c_cflag |= PARENB;
     newtio.c_cflag |= PARODD;
     newtio.c_iflag |= (INPCK | ISTRIP);
-    /*
     //偶数
     newtio.c_iflag |= (INPCK | ISTRIP);
     newtio.c_cflag |= PARENB;
     newtio.c_cflag &= ~PARODD;
     //无奇偶校验位
-     */
+    */
     newtio.c_cflag &= ~PARENB;
 
     /*设置波特率*/
