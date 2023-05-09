@@ -56,7 +56,7 @@ public:
 
     void fromImgCor2WorldCor(const std::vector<int> &point);
 
-    [[nodiscard()]] bool kinematicsMove(double x, double y, double z);
+    [[nodiscard]] bool kinematicsMove(double x, double y, double z);
 
     void clamp();
 
